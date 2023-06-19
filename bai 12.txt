@@ -1,0 +1,72 @@
+.text
+.equ SW,  0xFF200040
+.equ KEY, 0xFF200050
+.equ LED, 0xFF200000
+.equ SDRAM_END, 0x03FFFFFF
+.global _start
+_start:
+	movia 	sp,SDRAM_END -3
+	movia 	r6, KEY
+	movia	r7,SW
+	movia 	r3,LED
+	movia 	r20,0
+	movia 	r21,N
+LOOP:
+	mov 	r1, zero
+	movi 	r2, 0x2
+	movi 	r4, 0x4
+	movi 	r8, 0x8
+	stwio	r20,(r3)
+
+	call KEY_DECODE
+	
+	ldw		r10,(r21)
+	
+	and 	r12, r10, r2
+	cmpeq 	r12, r12, r2
+	bne		r12,r0,DICH_TRAI
+	
+	and 	r12, r10, r4
+	cmpeq 	r12, r12, r4
+	bne		r12,r0,DICH_PHAI
+	
+	and 	r12, r10, r8
+	cmpeq 	r12, r12, r8
+	bne		r12,r0,LOAD_SW
+	br LOOP
+DICH_TRAI:
+	slli	r20,r20,1
+	br LOOP
+DICH_PHAI:
+	srli 	r20,r20,1
+	br LOOP
+	
+LOAD_SW:
+	ldwio	r20,(r7)
+	br LOOP
+	
+KEY_DECODE:
+	subi	sp,sp,8
+	stwio	r11,4(sp)
+	stwio	r10,0(sp)
+	
+CHECK_KEY:
+	ldhio r10, 0(r6)
+	beq r10, zero, CHECK_KEY
+WAIT:
+	ldhio r11, 0(r6)
+	bne r11, zero, WAIT
+	andi r10, r10, 0x000E
+	
+	stw	r10,(r21)
+
+	ldwio	r11,4(sp)
+	ldwio	r10,0(sp)
+	addi	sp,sp,8
+
+	ret
+
+.data
+N: .word 0
+
+.end

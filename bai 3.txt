@@ -1,0 +1,46 @@
+.text
+.equ	SW,	0xFF200040
+.equ	RED_LED,	0xFF200000
+.equ	SDRAM_END,	0x03FFFFFF
+.global _start
+_start:
+	movia r2,SW
+	movia r3,RED_LED
+	movia sp,SDRAM_END -3
+	movi  r10,0
+LOOP:
+	ldwio r4,(r2)
+	andi  r5,r4,0xF
+	srli  r6,r4,0x4
+	andi r6,r6,0xF
+	
+	beq r5,r10,END2
+	beq r6,r10,END1
+	call FUNCT1
+	br LOOP
+FUNCT1:
+	subi sp,sp,0x8
+	stw r6,4(sp)
+	stw r5,0(sp)
+FOR:
+	beq r5,r6,END1
+	blt r5,r6,SUB
+	sub r5,r5,r6
+	br FOR
+SUB:
+	sub r6,r6,r5
+	br FOR
+END1:
+	stwio r5,(r3)
+	ldw r6,4(sp)
+	ldw r5,0(sp)
+	addi sp,sp,0x8
+	ret
+END2:
+	stwio r6,(r3)
+	ldw r6,4(sp)
+	ldw r5,0(sp)
+	addi sp,sp,0x8
+	ret
+.data
+.end
